@@ -56,38 +56,147 @@
 
 <!-- ... le reste du code ne change pas ... -->
 
+<!-- Bouton déclencheur -->
+
+
+<!-- Modal -->
+<div id="styleModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Choisissez un style</h2>
+    <div class="styles-grid">
+      <div class="style-card" data-style="moderne">
+        <img src="https://via.placeholder.com/120x80?text=Moderne" alt="Moderne">
+        <p>Moderne</p>
+      </div>
+      <div class="style-card" data-style="scandinave">
+        <img src="https://via.placeholder.com/120x80?text=Scandinave" alt="Scandinave">
+        <p>Scandinave</p>
+      </div>
+      <div class="style-card" data-style="minimaliste">
+        <img src="https://via.placeholder.com/120x80?text=Minimaliste" alt="Minimaliste">
+        <p>Minimaliste</p>
+      </div>
+      <div class="style-card" data-style="industriel">
+        <img src="https://via.placeholder.com/120x80?text=Industriel" alt="Industriel">
+        <p>Industriel</p>
+      </div>
+    </div>
+    <button id="cancelModal">Annuler</button>
+  </div>
+</div>
+
+<style>
+/* Modal background */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex; justify-content: center; align-items: center;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+}
+
+/* Hide modal */
+.hidden { display: none; }
+
+/* Modal box */
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Grid of styles */
+.styles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.style-card {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.style-card:hover {
+  transform: scale(1.05);
+  border-color: #6c63ff;
+}
+
+.style-card img {
+  width: 100%;
+  display: block;
+}
+
+.style-card p {
+  margin: 10px 0;
+  font-weight: bold;
+}
+
+#cancelModal {
+  background: #ccc;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+</style>
+
 <script>
 document.getElementById('try-now').addEventListener('click', () => {
   document.getElementById('upload').click();
 });
 
+let selectedFile = null;
+
 document.getElementById('upload').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  selectedFile = e.target.files[0];
+  if (!selectedFile) return;
 
-  // Remplace par un select dans l'UI si tu veux plus propre
-  const style = prompt("Quel style ? (moderne, scandinave, minimaliste, industriel...)") || "moderne";
-
-  const formData = new FormData();
-  formData.append('photo', file);
-  formData.append('style', style);
-
-  // appelle ton backend (ajuste le port si nécessaire)
-  const res = await fetch('https://roomify-1-0tbs.onrender.com/api/decor', {
-  method: 'POST',
-  body: formData
+  // Affiche la modale
+  document.getElementById('styleModal').classList.remove('hidden');
 });
 
+// Gestion de la sélection de style
+document.querySelectorAll('.style-card').forEach(card => {
+  card.addEventListener('click', async () => {
+    const style = card.dataset.style;
 
-  if (!res.ok) {
-    const err = await res.json();
-    alert('Erreur: ' + (err.error || res.statusText));
-    return;
-  }
+    const formData = new FormData();
+    formData.append('photo', selectedFile);
+    formData.append('style', style);
 
-  const data = await res.json();
-  // affichage simple : remplace par UI custom
-  alert('Suggestions:\n' + (Array.isArray(data.suggestions) ? data.suggestions.join('\n- ') : data.suggestions));
+    const res = await fetch('https://roomify-1-0tbs.onrender.com/api/decor', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert('Erreur: ' + (err.error || res.statusText));
+      return;
+    }
+
+    const data = await res.json();
+    alert('Suggestions:\n' + (Array.isArray(data.suggestions) ? data.suggestions.join('\n- ') : data.suggestions));
+
+    // Fermer la modale après sélection
+    document.getElementById('styleModal').classList.add('hidden');
+  });
+});
+
+// Bouton annuler
+document.getElementById('cancelModal').addEventListener('click', () => {
+  document.getElementById('styleModal').classList.add('hidden');
 });
 </script>
 
